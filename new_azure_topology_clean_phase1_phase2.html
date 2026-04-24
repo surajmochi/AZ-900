@@ -1,0 +1,590 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,system-ui,sans-serif);background:transparent;color:var(--color-text-primary,#1b1b1b)}
+.page{padding:16px 12px;display:flex;flex-direction:column;gap:0}
+
+/* ── zone labels ── */
+.zone-label{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:6px;padding-left:4px}
+
+/* ── external zone ── */
+.ext-zone{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.ext-box{border-radius:10px;padding:10px 14px;border:1.5px solid}
+.ext-box .name{font-size:13px;font-weight:600;margin-bottom:3px}
+.ext-box .detail{font-size:11px;opacity:.8;line-height:1.5}
+
+/* ── hub vnet ── */
+.hub-vnet{border-radius:14px;border:2px solid #185FA5;background:#E6F1FB22;padding:14px;margin-bottom:16px}
+.vnet-header{margin-bottom:12px}
+.vnet-title{font-size:15px;font-weight:700;color:#0C447C}
+.vnet-sub{font-size:11px;color:#185FA5;margin-top:2px}
+.hub-subnets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+
+/* ── subnet card ── */
+.subnet{border-radius:10px;border:1.5px solid;padding:10px 12px}
+.subnet-name{font-size:12px;font-weight:700;margin-bottom:3px}
+.subnet-cidr{font-size:11px;margin-bottom:8px;opacity:.75}
+.resource-box{border-radius:8px;border:1.5px solid;padding:9px 10px;margin-bottom:6px}
+.res-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.res-row{font-size:11px;line-height:1.65}
+.res-row span{font-weight:600}
+.badge{display:inline-block;border-radius:4px;font-size:10px;font-weight:600;padding:1px 6px;margin-right:4px;margin-bottom:3px;color:#fff}
+.badge.red{background:#A32D2D}
+.badge.blue{background:#185FA5}
+.badge.green{background:#3B6D11}
+.badge.purple{background:#534AB7}
+.badge.amber{background:#854F0B}
+.badge.gray{background:#5F5E5A}
+.restriction{font-size:10px;background:#FCEBEB;color:#791F1F;border-radius:4px;padding:3px 7px;margin-top:4px;line-height:1.5}
+.note-ok{font-size:10px;background:#DFF6DD;color:#173404;border-radius:4px;padding:3px 7px;margin-top:4px}
+
+/* Colors per subnet type */
+.sub-red{border-color:#A32D2D;background:#FCEBEB44}
+.sub-green{border-color:#3B6D11;background:#EAF3DE44}
+.sub-purple{border-color:#534AB7;background:#EEEDFE44}
+.sub-gray{border-color:#5F5E5A;background:#F1EFE844}
+.sub-amber{border-color:#854F0B;background:#FAEEDA44}
+.sub-teal{border-color:#0F6E56;background:#E1F5EE44}
+.sub-blue{border-color:#185FA5;background:#E6F1FB44}
+
+.res-red{border-color:#A32D2D;background:#fff}
+.res-green{border-color:#3B6D11;background:#fff}
+.res-purple{border-color:#534AB7;background:#fff}
+.res-gray{border-color:#5F5E5A;background:#fff}
+.res-amber{border-color:#854F0B;background:#fff}
+.res-teal{border-color:#0F6E56;background:#fff}
+.res-blue{border-color:#185FA5;background:#fff}
+
+/* ── UDR banner ── */
+.udr-banner{border-radius:8px;border:1.5px dashed #A32D2D;background:#FCEBEB55;padding:9px 14px;margin-top:8px}
+.udr-title{font-size:12px;font-weight:700;color:#791F1F;margin-bottom:4px}
+.udr-rule{font-size:11px;color:#A32D2D;line-height:1.7;font-family:var(--font-mono,monospace)}
+
+/* ── arrow connector ── */
+.connector-row{display:flex;align-items:center;justify-content:center;gap:0;margin:6px 0}
+.conn-line{flex:1;height:2px;background:var(--conn-color,#378ADD)}
+.conn-label{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;border:1.5px solid var(--conn-color,#378ADD);color:var(--conn-color,#378ADD);background:#fff}
+.arrow-down{display:flex;justify-content:center;margin:2px 0}
+.arrow-down svg{display:block}
+
+/* ── spokes row ── */
+.spokes-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.spoke-vnet{border-radius:14px;border:2px solid;padding:12px}
+
+/* ── peering banner ── */
+.peering-band{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px}
+.peering-chip{border-radius:8px;padding:6px 10px;font-size:11px;font-weight:500;text-align:center;border:1px dashed #378ADD;color:#0C447C;background:#E6F1FB88}
+
+/* ── flow table ── */
+.flow-section{border-radius:12px;border:1.5px solid var(--color-border-secondary,#d0d0d0);padding:12px 14px;margin-bottom:14px}
+.flow-title{font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px}
+.flow-table{width:100%;border-collapse:collapse}
+.flow-table th{font-size:11px;font-weight:600;color:var(--color-text-secondary);text-align:left;padding:5px 8px;border-bottom:1.5px solid var(--color-border-secondary,#e0e0e0)}
+.flow-table td{font-size:11px;padding:6px 8px;border-bottom:1px solid var(--color-border-tertiary,#eee);vertical-align:top;line-height:1.55}
+.flow-table tr:last-child td{border-bottom:none}
+.flow-table tr:nth-child(even) td{background:var(--color-background-secondary,#f7f7f5)}
+.pill{display:inline-block;border-radius:5px;padding:1px 7px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+.pill-blue{background:#185FA5}
+.pill-orange{background:#854F0B}
+.pill-green{background:#3B6D11}
+.pill-red{background:#A32D2D}
+.pill-purple{background:#534AB7}
+.pill-gray{background:#5F5E5A}
+.pill-teal{background:#0F6E56}
+
+/* ── IP ref table ── */
+.ip-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px}
+.ip-table th{background:#185FA5;color:#fff;padding:6px 10px;text-align:left;font-size:11px;font-weight:600}
+.ip-table tr:nth-child(even) td{background:#F1EFE8}
+.ip-table td{padding:6px 10px;border-bottom:1px solid #e8e8e8;vertical-align:middle;line-height:1.5}
+.ip-table tr:last-child td{border-bottom:none}
+.cidr{font-family:var(--font-mono,monospace);font-weight:600;color:#185FA5;font-size:11px}
+</style>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- EXTERNAL / INTERNET ZONE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="zone-label">External / Internet zone</div>
+<div class="ext-zone">
+  <div class="ext-box" style="border-color:#378ADD;background:#E6F1FB44">
+    <div class="name" style="color:#0C447C">Internet users</div>
+    <div class="detail" style="color:#185FA5">HTTPS :443 &amp; HTTP :80 inbound<br>DNAT'd by Azure Firewall PIP</div>
+  </div>
+  <div class="ext-box" style="border-color:#3B6D11;background:#EAF3DE44">
+    <div class="name" style="color:#173404">On-premises DC (simulated)</div>
+    <div class="detail" style="color:#3B6D11">192.168.10.0/24 · BGP AS 65001<br>S2S VPN via VPN Gateway (Phase 4)</div>
+  </div>
+  <div class="ext-box" style="border-color:#5F5E5A;background:#F1EFE844">
+    <div class="name" style="color:#2C2C2A">Azure platform services</div>
+    <div class="detail" style="color:#5F5E5A">AzureMonitor · WindowsUpdate<br>Log Analytics · Threat Intel feed</div>
+  </div>
+</div>
+
+<!-- arrow down into hub -->
+<div class="arrow-down">
+  <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 4v14M6 14l6 6 6-6" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- HUB VNET -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="hub-vnet">
+  <div class="vnet-header">
+    <div class="vnet-title">Hub VNet — ent-net-hub-vnet-dev</div>
+    <div class="vnet-sub">Address space: 10.0.0.0/16 &nbsp;·&nbsp; Region: East US &nbsp;·&nbsp; Phase 1</div>
+  </div>
+
+  <div class="hub-subnets">
+
+    <!-- AzureFirewallSubnet -->
+    <div class="subnet sub-red">
+      <div class="subnet-name" style="color:#791F1F">AzureFirewallSubnet</div>
+      <div class="subnet-cidr" style="color:#A32D2D">10.0.1.0/26 &nbsp;·&nbsp; 59 usable IPs</div>
+      <div class="resource-box res-red">
+        <div class="res-title" style="color:#501313">Azure Firewall Premium</div>
+        <div class="res-row"><span>Name:</span> ent-net-firewall-dev</div>
+        <div class="res-row"><span>Private IP:</span> 10.0.1.4</div>
+        <div class="res-row"><span>Public IP:</span> Dynamic (Standard SKU)</div>
+        <div class="res-row"><span>SKU:</span> Premium · Zone-redundant (1,2,3)</div>
+        <div class="res-row"><span>Policy:</span> ent-net-fw-policy-dev</div>
+        <div class="res-row"><span>IDPS:</span> Alert mode · 58k+ signatures</div>
+        <div class="res-row"><span>DNS Proxy:</span> ON (required for FQDN rules)</div>
+        <div class="res-row"><span>Threat Intel:</span> Alert mode</div>
+        <div style="margin-top:6px"><span class="badge red">Phase 2</span></div>
+      </div>
+      <div class="restriction">No NSG allowed · No Route Table allowed<br>(minimum /26 — Azure enforces exact name)</div>
+    </div>
+
+    <!-- GatewaySubnet -->
+    <div class="subnet sub-green">
+      <div class="subnet-name" style="color:#173404">GatewaySubnet</div>
+      <div class="subnet-cidr" style="color:#3B6D11">10.0.2.0/27 &nbsp;·&nbsp; 27 usable IPs</div>
+      <div class="resource-box res-green">
+        <div class="res-title" style="color:#173404">VPN Gateway</div>
+        <div class="res-row"><span>Name:</span> ent-net-vpngw-dev</div>
+        <div class="res-row"><span>SKU:</span> VpnGw2 · Generation 2</div>
+        <div class="res-row"><span>Mode:</span> S2S + P2S</div>
+        <div class="res-row"><span>BGP AS:</span> 65515</div>
+        <div class="res-row"><span>Status:</span> Planned — Phase 4</div>
+        <div style="margin-top:6px"><span class="badge gray">Phase 4</span></div>
+      </div>
+      <div class="restriction">NSG not recommended — breaks BGP/IKE<br>(minimum /27 — Azure enforces exact name)</div>
+    </div>
+
+    <!-- AzureBastionSubnet -->
+    <div class="subnet sub-purple">
+      <div class="subnet-name" style="color:#26215C">AzureBastionSubnet</div>
+      <div class="subnet-cidr" style="color:#534AB7">10.0.3.0/26 &nbsp;·&nbsp; 59 usable IPs</div>
+      <div class="resource-box res-purple">
+        <div class="res-title" style="color:#26215C">Azure Bastion</div>
+        <div class="res-row"><span>Name:</span> ent-net-bastion-dev</div>
+        <div class="res-row"><span>SKU:</span> Standard</div>
+        <div class="res-row"><span>Access:</span> Browser HTTPS :443 only</div>
+        <div class="res-row"><span>Zero Trust:</span> No public IPs on any VM</div>
+        <div class="res-row"><span>Status:</span> Planned — Phase 3</div>
+        <div style="margin-top:6px"><span class="badge purple">Phase 3</span></div>
+      </div>
+      <div class="note-ok">NSG required — 9 mandatory Microsoft rules<br>(minimum /26 — Azure enforces exact name)</div>
+    </div>
+
+    <!-- ManagementSubnet -->
+    <div class="subnet sub-gray">
+      <div class="subnet-name" style="color:#2C2C2A">ManagementSubnet</div>
+      <div class="subnet-cidr" style="color:#5F5E5A">10.0.4.0/24 &nbsp;·&nbsp; 251 usable IPs</div>
+      <div class="resource-box res-gray">
+        <div class="res-title" style="color:#2C2C2A">Management tools</div>
+        <div class="res-row"><span>Purpose:</span> Monitoring agents, ops VMs</div>
+        <div class="res-row"><span>NSG:</span> Restrict inbound — ops sources only</div>
+        <div class="res-row"><span>UDR:</span> 0.0.0.0/0 → 10.0.1.4 (Firewall)</div>
+        <div class="res-row"><span>RT name:</span> ent-net-rt-hub-mgmt-dev</div>
+        <div style="margin-top:6px"><span class="badge red">UDR active</span> <span class="badge blue">Phase 1</span></div>
+      </div>
+    </div>
+
+  </div><!-- /hub-subnets -->
+
+  <!-- Firewall Policy card -->
+  <div class="udr-banner" style="border-color:#854F0B;background:#FAEEDA55;margin-bottom:10px">
+    <div class="udr-title" style="color:#412402">Firewall Policy — ent-net-fw-policy-dev (Premium SKU) &nbsp;<span class="badge amber">Phase 2</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#633806;margin-bottom:4px">DNAT rules (inbound)</div>
+        <div class="udr-rule" style="color:#854F0B">dnat-https-to-web<br>  src: Any · dst: FW PIP :443<br>  → 10.1.1.4:443</div>
+        <div class="udr-rule" style="color:#854F0B">dnat-http-to-web<br>  src: Any · dst: FW PIP :80<br>  → 10.1.1.4:80</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#633806;margin-bottom:4px">Network rules (L4 east-west)</div>
+        <div class="udr-rule" style="color:#854F0B">allow-web-to-app<br>  10.1.1.0/24 → 10.1.2.0/24 :8080</div>
+        <div class="udr-rule" style="color:#854F0B">allow-app-to-sql<br>  10.1.2.0/24 → 10.2.1.0/24 :1433</div>
+        <div class="udr-rule" style="color:#854F0B">deny-web-direct-to-data [DENY]<br>  10.1.1.0/24 → 10.2.1.0/24 Any</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#633806;margin-bottom:4px">Application rules (L7 FQDN)</div>
+        <div class="udr-rule" style="color:#854F0B">allow-azure-mgmt<br>  *.azure.com · *.microsoft.com</div>
+        <div class="udr-rule" style="color:#854F0B">allow-github<br>  github.com · *.github.com</div>
+        <div class="udr-rule" style="color:#854F0B">deny-malicious [DENY]<br>  WebCat: Malware · Phishing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UDR force-tunnel banner -->
+  <div class="udr-banner">
+    <div class="udr-title">Route Tables (UDRs) — Force-tunnel pattern applied to all spoke subnets &nbsp;<span class="badge red">Phase 2 — 7 route tables deployed</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+      <div>
+        <div class="udr-rule">0.0.0.0/0      → VirtualAppliance → 10.0.1.4  (internet egress via Firewall)</div>
+        <div class="udr-rule">10.1.0.0/16    → VirtualAppliance → 10.0.1.4  (overrides spoke1 peering route)</div>
+        <div class="udr-rule">10.2.0.0/16    → VirtualAppliance → 10.0.1.4  (overrides spoke2 peering route)</div>
+      </div>
+      <div>
+        <div class="udr-rule">10.3.0.0/16    → VirtualAppliance → 10.0.1.4  (overrides spoke3 peering route)</div>
+        <div class="udr-rule">10.0.0.0/16    → VirtualAppliance → 10.0.1.4  (hub-bound traffic inspected)</div>
+        <div class="udr-rule">disableBgpRoutePropagation: false  (on-prem routes propagate from GW)</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /hub-vnet -->
+
+<!-- ── Peering labels ── -->
+<div class="peering-band">
+  <div class="peering-chip">Hub → Spoke 1 peering<br>AllowGatewayTransit: true<br>spoke1-to-hub · UseRemoteGateways: false (true in Phase 4)</div>
+  <div class="peering-chip">Hub → Spoke 2 peering<br>AllowGatewayTransit: true<br>spoke2-to-hub · UseRemoteGateways: false (true in Phase 4)</div>
+  <div class="peering-chip">Hub → Spoke 3 peering<br>AllowGatewayTransit: true<br>spoke3-to-hub · UseRemoteGateways: false (true in Phase 4)</div>
+</div>
+
+<!-- arrow down into spokes -->
+<div class="arrow-down" style="margin-bottom:8px">
+  <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 4v14M6 14l6 6 6-6" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SPOKE VNETs -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="spokes-row">
+
+  <!-- SPOKE 1 -->
+  <div class="spoke-vnet" style="border-color:#0F6E56;background:#E1F5EE22">
+    <div class="vnet-title" style="color:#085041;font-size:14px">Spoke 1 — Web / App VNet</div>
+    <div class="vnet-sub" style="color:#0F6E56">ent-net-spoke1-web-vnet-dev · 10.1.0.0/16 · Phase 1</div>
+
+    <div style="margin-top:10px">
+      <div class="subnet sub-teal" style="margin-bottom:10px">
+        <div class="subnet-name" style="color:#085041">WebSubnet</div>
+        <div class="subnet-cidr" style="color:#0F6E56">10.1.1.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge green">NSG: web-nsg-dev</span> <span class="badge red">RT: rt-spoke1-web-dev</span></div>
+        <div class="res-row"><span>VM:</span> web-server-01 (no public IP)</div>
+        <div class="res-row"><span>NSG allow:</span> :443, :80 from Internet</div>
+        <div class="res-row"><span>NSG allow:</span> :22, :3389 from 10.0.3.0/26 only</div>
+        <div class="res-row"><span>NSG deny:</span> All other inbound</div>
+        <div class="res-row"><span>FW DNAT:</span> PIP:443 → 10.1.1.4:443</div>
+        <div class="res-row"><span>UDR next-hop:</span> 10.0.1.4 (Firewall)</div>
+        <div class="res-row"><span>ASG:</span> web-asg-dev</div>
+      </div>
+
+      <div class="subnet sub-teal">
+        <div class="subnet-name" style="color:#085041">AppSubnet</div>
+        <div class="subnet-cidr" style="color:#0F6E56">10.1.2.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge green">NSG: app-nsg-dev</span> <span class="badge red">RT: rt-spoke1-app-dev</span></div>
+        <div class="res-row"><span>VM:</span> app-server-01 (no public IP)</div>
+        <div class="res-row"><span>NSG allow:</span> :8080, :8443 from 10.1.1.0/24</div>
+        <div class="res-row"><span>NSG allow:</span> :22, :3389 from 10.0.3.0/26</div>
+        <div class="res-row"><span>NSG deny:</span> All other inbound</div>
+        <div class="res-row"><span>FW rule:</span> allow-web-to-app :8080</div>
+        <div class="res-row"><span>FW rule:</span> allow-app-to-sql :1433</div>
+        <div class="res-row"><span>UDR next-hop:</span> 10.0.1.4 (Firewall)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOKE 2 -->
+  <div class="spoke-vnet" style="border-color:#3B6D11;background:#EAF3DE22">
+    <div class="vnet-title" style="color:#173404;font-size:14px">Spoke 2 — Data VNet</div>
+    <div class="vnet-sub" style="color:#3B6D11">ent-net-spoke2-data-vnet-dev · 10.2.0.0/16 · Phase 1</div>
+
+    <div style="margin-top:10px">
+      <div class="subnet sub-green" style="margin-bottom:10px">
+        <div class="subnet-name" style="color:#173404">DataSubnet</div>
+        <div class="subnet-cidr" style="color:#3B6D11">10.2.1.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge green">NSG: data-nsg-dev</span> <span class="badge red">RT: rt-spoke2-data-dev</span></div>
+        <div class="res-row"><span>VM:</span> sql-server-01 (no public IP)</div>
+        <div class="res-row"><span>NSG allow:</span> :1433 from 10.1.2.0/24 ONLY</div>
+        <div class="res-row"><span>NSG allow:</span> :22, :3389 from 10.0.3.0/26</div>
+        <div class="res-row"><span>NSG deny:</span> All other — isolated tier</div>
+        <div class="res-row"><span>FW DENY:</span> deny-web-direct-to-data</div>
+        <div class="res-row"><span>UDR next-hop:</span> 10.0.1.4 (Firewall)</div>
+        <div class="restriction" style="margin-top:6px">Data tier has zero internet egress.<br>Patches only via FW application rules.</div>
+      </div>
+
+      <div class="subnet sub-green">
+        <div class="subnet-name" style="color:#173404">PrivateEndpointSubnet</div>
+        <div class="subnet-cidr" style="color:#3B6D11">10.2.2.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge red">RT: rt-spoke2-pe-dev</span></div>
+        <div class="res-row"><span>Azure SQL PE:</span> 10.2.2.4</div>
+        <div class="res-row"><span>Key Vault PE:</span> 10.2.2.5 (Phase 3)</div>
+        <div class="res-row"><span>Policy:</span> networkPolicies: Disabled</div>
+        <div class="res-row"><span>DNS:</span> Private DNS Zone link</div>
+        <div class="note-ok" style="margin-top:6px">Traffic never leaves Azure backbone.<br>PaaS accessed via private IPs only.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOKE 3 -->
+  <div class="spoke-vnet" style="border-color:#854F0B;background:#FAEEDA22">
+    <div class="vnet-title" style="color:#412402;font-size:14px">Spoke 3 — DMZ / Mgmt VNet</div>
+    <div class="vnet-sub" style="color:#854F0B">ent-net-spoke3-dmz-vnet-dev · 10.3.0.0/16 · Phase 1</div>
+
+    <div style="margin-top:10px">
+      <div class="subnet sub-amber" style="margin-bottom:10px">
+        <div class="subnet-name" style="color:#412402">DMZSubnet</div>
+        <div class="subnet-cidr" style="color:#854F0B">10.3.1.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge amber">NSG: dmz-nsg-dev</span> <span class="badge red">RT: rt-spoke3-dmz-dev</span></div>
+        <div class="res-row"><span>Purpose:</span> Internet-facing DMZ / NVA</div>
+        <div class="res-row"><span>NSG:</span> Strict inbound — specific ports</div>
+        <div class="res-row"><span>UDR next-hop:</span> 10.0.1.4 (Firewall)</div>
+        <div class="res-row"><span>All egress:</span> Via Firewall SNAT</div>
+      </div>
+
+      <div class="subnet sub-amber">
+        <div class="subnet-name" style="color:#412402">JumpSubnet</div>
+        <div class="subnet-cidr" style="color:#854F0B">10.3.2.0/24 · 251 usable IPs</div>
+        <div style="margin-bottom:6px"><span class="badge amber">NSG: jump-nsg-dev</span> <span class="badge red">RT: rt-spoke3-jump-dev</span></div>
+        <div class="res-row"><span>VM:</span> jump-server-01 (no public IP)</div>
+        <div class="res-row"><span>NSG allow:</span> :22, :3389 from 10.0.3.0/26 ONLY</div>
+        <div class="res-row"><span>NSG deny:</span> ALL other inbound — air-gapped</div>
+        <div class="res-row"><span>Access path:</span> Portal → Bastion → HTTPS → VM</div>
+        <div class="res-row"><span>FW rule:</span> allow-jump-to-all :22,:3389</div>
+        <div class="res-row"><span>UDR next-hop:</span> 10.0.1.4 (Firewall)</div>
+        <div class="restriction" style="margin-top:6px">Strictest NSG in the environment.<br>Only Bastion subnet 10.0.3.0/26 can reach it.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /spokes-row -->
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TRAFFIC FLOW TABLE -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="flow-section">
+  <div class="flow-title">Traffic flow paths — Phase 1 + Phase 2</div>
+  <table class="flow-table">
+    <thead>
+      <tr>
+        <th>Flow</th>
+        <th>Path</th>
+        <th>Enforcement</th>
+        <th>Ports</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill pill-blue">Inbound HTTPS</span></td>
+        <td>Internet → Firewall PIP → DNAT → WebSubnet 10.1.1.4</td>
+        <td>FW DNAT rule · NSG (web-nsg-dev)</td>
+        <td>:443, :80</td>
+        <td style="color:#107C10;font-weight:600">Allow</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-orange">East-west Web→App</span></td>
+        <td>10.1.1.x → UDR → Firewall 10.0.1.4 → 10.1.2.x</td>
+        <td>FW network rule (allow-web-to-app) · app-nsg-dev</td>
+        <td>:8080</td>
+        <td style="color:#107C10;font-weight:600">Allow</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-green">Cross-spoke App→SQL</span></td>
+        <td>10.1.2.x → UDR → Firewall 10.0.1.4 → 10.2.1.x</td>
+        <td>FW network rule (allow-app-to-sql) · data-nsg-dev</td>
+        <td>:1433</td>
+        <td style="color:#107C10;font-weight:600">Allow</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-red">Blocked Web→Data</span></td>
+        <td>10.1.1.x → UDR → Firewall 10.0.1.4 → denied</td>
+        <td>FW deny rule (deny-web-direct-to-data)</td>
+        <td>Any</td>
+        <td style="color:#A32D2D;font-weight:600">Deny</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-purple">Admin via Bastion</span></td>
+        <td>Browser → Bastion 10.0.3.x → HTTPS tunnel → Jump 10.3.2.x</td>
+        <td>Bastion NSG (mandatory rules) · jump-nsg-dev</td>
+        <td>:443 → :3389/:22</td>
+        <td style="color:#107C10;font-weight:600">Allow</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-teal">Internet egress</span></td>
+        <td>Any VM → UDR → Firewall 10.0.1.4 → SNAT → Internet</td>
+        <td>FW app rules (FQDN allowlist) · Threat Intel</td>
+        <td>:443, :80</td>
+        <td style="color:#107C10;font-weight:600">Allow if approved FQDN</td>
+      </tr>
+      <tr>
+        <td><span class="pill pill-gray">On-prem hybrid</span></td>
+        <td>On-prem → S2S VPN → VPN Gateway → Hub/Spokes</td>
+        <td>VPN Gateway BGP AS 65515 ↔ 65001</td>
+        <td>Any (tunnelled)</td>
+        <td style="color:#5F5E5A;font-weight:600">Phase 4</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- IP ADDRESS PLAN -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="flow-section">
+  <div class="flow-title">Complete IP address plan</div>
+  <table class="ip-table">
+    <thead>
+      <tr>
+        <th>VNet / Subnet</th>
+        <th>CIDR</th>
+        <th>Usable IPs</th>
+        <th>NSG</th>
+        <th>Route Table</th>
+        <th>Key constraint</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:700;color:#0C447C">Hub VNet</td>
+        <td class="cidr">10.0.0.0/16</td>
+        <td>65,534</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Central hub — no workloads here</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">AzureFirewallSubnet</td>
+        <td class="cidr">10.0.1.0/26</td>
+        <td>59</td>
+        <td style="color:#A32D2D;font-weight:600">NOT supported</td>
+        <td style="color:#A32D2D;font-weight:600">NOT allowed</td>
+        <td>Min /26 · exact name required · FW IP = 10.0.1.4</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">GatewaySubnet</td>
+        <td class="cidr">10.0.2.0/27</td>
+        <td>27</td>
+        <td style="color:#854F0B;font-weight:600">Not recommended</td>
+        <td style="color:#A32D2D;font-weight:600">Breaks BGP</td>
+        <td>Min /27 · exact name required · Phase 4</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">AzureBastionSubnet</td>
+        <td class="cidr">10.0.3.0/26</td>
+        <td>59</td>
+        <td style="color:#3B6D11;font-weight:600">Required (9 rules)</td>
+        <td>—</td>
+        <td>Min /26 · exact name required · Phase 3</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">ManagementSubnet</td>
+        <td class="cidr">10.0.4.0/24</td>
+        <td>251</td>
+        <td>Custom NSG</td>
+        <td>rt-hub-mgmt-dev</td>
+        <td>Ops tooling · 0.0.0.0/0 → 10.0.1.4</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:#085041">Spoke 1 — Web/App VNet</td>
+        <td class="cidr">10.1.0.0/16</td>
+        <td>65,534</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Presentation + application tier</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">WebSubnet</td>
+        <td class="cidr">10.1.1.0/24</td>
+        <td>251</td>
+        <td>web-nsg-dev</td>
+        <td>rt-spoke1-web-dev</td>
+        <td>Internet-facing · DNAT target · no public VM IPs</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">AppSubnet</td>
+        <td class="cidr">10.1.2.0/24</td>
+        <td>251</td>
+        <td>app-nsg-dev</td>
+        <td>rt-spoke1-app-dev</td>
+        <td>Internal only · reachable from WebSubnet :8080</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:#173404">Spoke 2 — Data VNet</td>
+        <td class="cidr">10.2.0.0/16</td>
+        <td>65,534</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Data tier — most restricted spoke</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">DataSubnet</td>
+        <td class="cidr">10.2.1.0/24</td>
+        <td>251</td>
+        <td>data-nsg-dev</td>
+        <td>rt-spoke2-data-dev</td>
+        <td>SQL :1433 from 10.1.2.0/24 only · no internet</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">PrivateEndpointSubnet</td>
+        <td class="cidr">10.2.2.0/24</td>
+        <td>251</td>
+        <td>—</td>
+        <td>rt-spoke2-pe-dev</td>
+        <td>networkPolicies: Disabled · required for PE</td>
+      </tr>
+      <tr>
+        <td style="font-weight:700;color:#412402">Spoke 3 — DMZ/Mgmt VNet</td>
+        <td class="cidr">10.3.0.0/16</td>
+        <td>65,534</td>
+        <td>—</td>
+        <td>—</td>
+        <td>Admin access and DMZ services</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">DMZSubnet</td>
+        <td class="cidr">10.3.1.0/24</td>
+        <td>251</td>
+        <td>dmz-nsg-dev</td>
+        <td>rt-spoke3-dmz-dev</td>
+        <td>Internet-facing DMZ · all egress via Firewall</td>
+      </tr>
+      <tr>
+        <td style="padding-left:20px">JumpSubnet</td>
+        <td class="cidr">10.3.2.0/24</td>
+        <td>251</td>
+        <td>jump-nsg-dev</td>
+        <td>rt-spoke3-jump-dev</td>
+        <td>No public IPs · only Bastion (10.0.3.0/26) can reach it</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- ZERO TRUST SUMMARY -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div style="border-radius:12px;border:2px solid #185FA5;background:#E6F1FB44;padding:14px">
+  <div style="font-size:13px;font-weight:700;color:#0C447C;margin-bottom:8px">Zero Trust enforcement — Phase 1 + Phase 2</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px">Verify Explicitly</div>
+      <div style="font-size:11px;color:#0C447C;line-height:1.65">Azure AD auth required for Bastion sessions · IDPS signature inspection on all traffic · Firewall logs every allow/deny decision to Log Analytics</div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px">Least Privilege</div>
+      <div style="font-size:11px;color:#0C447C;line-height:1.65">NSG allow-lists per subnet · FW explicit allow + deny rules · Data tier reachable only from App tier on :1433 · Jump servers reachable only from Bastion subnet</div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px">Assume Breach</div>
+      <div style="font-size:11px;color:#0C447C;line-height:1.65">Force-tunnel UDRs on all 7 subnets · VNet segmentation limits lateral movement · NSG flow logs for forensics · No VM can bypass the Firewall</div>
+    </div>
+  </div>
+</div>
+
+</div>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:transparent;font-family:var(--font-sans,"Segoe UI",Arial,sans-serif);color:var(--color-text-primary,#1b1b1b)}
+.wrap{width:100%;overflow-x:auto;padding:8px 0}
+svg{display:block;width:100%;max-width:1100px;margin:0 auto}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:8px 12px;font-size:11px;color:var(--color-text-secondary)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* Tooltip */
+#tip{position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;
+  background:var(--color-background-primary,#fff);
+  border:1px solid var(--color-border-secondary,rgba(0,0,0,.2));
+  border-radius:8px;padding:10px 13px;font-size:12px;max-width:260px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);line-height:1.5}
+#tip .tip-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+#tip .tip-row{display:flex;justify-content:space-between;gap:12px;color:var(--color-text-secondary)}
+#tip .tip-val{font-family:var(--font-mono,"Courier New");font-size:11px;color:var(--color-text-primary)}
+</style>
+</head>
+<body>
+<h2 class="sr-only">Azure Enterprise Network Topology — Phase 1 and Phase 2 — Hub-Spoke with Azure Firewall, UDRs, NSGs, and VNet Peering</h2>
+<div id="tip"></div>
+<div class="wrap">
+<svg viewBox="0 0 1100 1360" role="img">
+<title>Azure Enterprise Network — Hub-Spoke Topology (Phase 1 + Phase 2)</title>
+<desc>Full Azure network diagram showing Hub VNet, three Spoke VNets, Azure Firewall Premium, VPN Gateway, Azure Bastion, NSGs, Route Tables with UDRs, and all connectivity including VNet Peering and traffic flow paths.</desc>
+
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#378ADD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arr-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#E07B00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arr-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#107C10" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arr-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#A32D2D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- INTERNET / EXTERNAL ZONE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="10" width="1060" height="66" rx="8" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="5 3" opacity=".5"/>
+<text x="34" y="27" font-size="11" fill="#888" font-family="var(--font-sans)">Internet / External</text>
+
+<!-- Internet users -->
+<rect x="40" y="32" width="130" height="34" rx="6" fill="#E6F1FB" stroke="#378ADD" stroke-width="1"/>
+<text x="105" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#0C447C" font-family="var(--font-sans)">Internet Users</text>
+<text x="105" y="59" text-anchor="middle" font-size="10" fill="#185FA5" font-family="var(--font-sans)">HTTPS :443 / :80</text>
+
+<!-- On-premises -->
+<rect x="210" y="32" width="180" height="34" rx="6" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1"/>
+<text x="300" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#173404" font-family="var(--font-sans)">On-Premises DC (simulated)</text>
+<text x="300" y="59" text-anchor="middle" font-size="10" fill="#3B6D11" font-family="var(--font-sans)">192.168.10.0/24 · BGP AS 65001</text>
+
+<!-- Admin / DevOps -->
+<rect x="420" y="32" width="140" height="34" rx="6" fill="#F4EEF8" stroke="#8764B8" stroke-width="1"/>
+<text x="490" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#26215C" font-family="var(--font-sans)">Admin / DevOps</text>
+<text x="490" y="59" text-anchor="middle" font-size="10" fill="#534AB7" font-family="var(--font-sans)">Azure Portal · HTTPS :443</text>
+
+<!-- Log Analytics (cloud) -->
+<rect x="590" y="32" width="170" height="34" rx="6" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+<text x="675" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#412402" font-family="var(--font-sans)">Log Analytics Workspace</text>
+<text x="675" y="59" text-anchor="middle" font-size="10" fill="#854F0B" font-family="var(--font-sans)">ent-net-law-dev · PerGB2018</text>
+
+<!-- Threat Intel Feed -->
+<rect x="790" y="32" width="150" height="34" rx="6" fill="#FCEBEB" stroke="#A32D2D" stroke-width="1"/>
+<text x="865" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#501313" font-family="var(--font-sans)">Microsoft Threat Intel</text>
+<text x="865" y="59" text-anchor="middle" font-size="10" fill="#A32D2D" font-family="var(--font-sans)">58,000+ IDPS signatures</text>
+
+<!-- Azure backbone -->
+<rect x="960" y="32" width="120" height="34" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+<text x="1020" y="46" text-anchor="middle" font-size="11" font-weight="500" fill="#2C2C2A" font-family="var(--font-sans)">Azure backbone</text>
+<text x="1020" y="59" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="var(--font-sans)">AzureMonitor · WindowsUpdate</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- HUB VNET OUTER CONTAINER -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="94" width="1060" height="402" rx="14" fill="#E6F1FB" fill-opacity=".35" stroke="#185FA5" stroke-width="1.5"/>
+<text x="38" y="113" font-size="12" font-weight="500" fill="#0C447C" font-family="var(--font-sans)">Hub VNet</text>
+<text x="38" y="128" font-size="10" fill="#185FA5" font-family="var(--font-sans)">ent-net-hub-vnet-dev  ·  10.0.0.0/16  ·  East US  ·  Phase 1</text>
+
+<!-- ── AzureFirewallSubnet ── -->
+<rect x="36" y="136" width="204" height="116" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="1"/>
+<text x="138" y="152" text-anchor="middle" font-size="10" font-weight="500" fill="#791F1F" font-family="var(--font-sans)">AzureFirewallSubnet</text>
+<text x="138" y="165" text-anchor="middle" font-size="10" fill="#A32D2D" font-family="var(--font-sans)">10.0.1.0/26 · /26 min · No NSG · No UDR</text>
+
+<!-- Firewall icon box -->
+<rect x="54" y="174" width="168" height="68" rx="6" fill="#fff" stroke="#A32D2D" stroke-width="1.2"/>
+<text x="138" y="192" text-anchor="middle" font-size="12" font-weight="500" fill="#501313" font-family="var(--font-sans)">Azure Firewall Premium</text>
+<text x="138" y="207" text-anchor="middle" font-size="10" fill="#791F1F" font-family="var(--font-sans)">ent-net-firewall-dev</text>
+<text x="138" y="221" text-anchor="middle" font-size="10" fill="#A32D2D" font-family="var(--font-sans)">Private IP: 10.0.1.4</text>
+<text x="138" y="234" text-anchor="middle" font-size="10" fill="#A32D2D" font-family="var(--font-sans)">Public IP: dynamic (Standard SKU)</text>
+
+<!-- Phase 2 badge on Firewall -->
+<rect x="56" y="175" width="46" height="13" rx="3" fill="#A32D2D"/>
+<text x="79" y="185" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">Phase 2</text>
+
+<!-- ── GatewaySubnet ── -->
+<rect x="254" y="136" width="190" height="116" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1"/>
+<text x="349" y="152" text-anchor="middle" font-size="10" font-weight="500" fill="#173404" font-family="var(--font-sans)">GatewaySubnet</text>
+<text x="349" y="165" text-anchor="middle" font-size="10" fill="#3B6D11" font-family="var(--font-sans)">10.0.2.0/27 · /27 min · No NSG (BGP)</text>
+
+<rect x="268" y="174" width="162" height="68" rx="6" fill="#fff" stroke="#3B6D11" stroke-width="1.2"/>
+<text x="349" y="192" text-anchor="middle" font-size="12" font-weight="500" fill="#173404" font-family="var(--font-sans)">VPN Gateway</text>
+<text x="349" y="207" text-anchor="middle" font-size="10" fill="#27500A" font-family="var(--font-sans)">ent-net-vpngw-dev</text>
+<text x="349" y="221" text-anchor="middle" font-size="10" fill="#3B6D11" font-family="var(--font-sans)">Gen2 VpnGw2 · S2S + P2S</text>
+<text x="349" y="234" text-anchor="middle" font-size="10" fill="#3B6D11" font-family="var(--font-sans)">BGP AS 65515 · Phase 4</text>
+
+<rect x="270" y="175" width="36" height="13" rx="3" fill="#3B6D11"/>
+<text x="288" y="185" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">Ph 4</text>
+
+<!-- ── AzureBastionSubnet ── -->
+<rect x="458" y="136" width="190" height="116" rx="8" fill="#F4EEF8" stroke="#8764B8" stroke-width="1"/>
+<text x="553" y="152" text-anchor="middle" font-size="10" font-weight="500" fill="#26215C" font-family="var(--font-sans)">AzureBastionSubnet</text>
+<text x="553" y="165" text-anchor="middle" font-size="10" fill="#534AB7" font-family="var(--font-sans)">10.0.3.0/26 · /26 min · NSG required</text>
+
+<rect x="472" y="174" width="162" height="68" rx="6" fill="#fff" stroke="#8764B8" stroke-width="1.2"/>
+<text x="553" y="192" text-anchor="middle" font-size="12" font-weight="500" fill="#26215C" font-family="var(--font-sans)">Azure Bastion</text>
+<text x="553" y="207" text-anchor="middle" font-size="10" fill="#3C3489" font-family="var(--font-sans)">ent-net-bastion-dev</text>
+<text x="553" y="221" text-anchor="middle" font-size="10" fill="#534AB7" font-family="var(--font-sans)">Standard SKU · No public VM IPs</text>
+<text x="553" y="234" text-anchor="middle" font-size="10" fill="#534AB7" font-family="var(--font-sans)">RDP/SSH via HTTPS :443 · Phase 3</text>
+
+<rect x="474" y="175" width="36" height="13" rx="3" fill="#8764B8"/>
+<text x="492" y="185" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">Ph 3</text>
+
+<!-- ── ManagementSubnet ── -->
+<rect x="662" y="136" width="200" height="116" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="1"/>
+<text x="762" y="152" text-anchor="middle" font-size="10" font-weight="500" fill="#2C2C2A" font-family="var(--font-sans)">ManagementSubnet</text>
+<text x="762" y="165" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="var(--font-sans)">10.0.4.0/24 · 251 usable IPs</text>
+
+<rect x="676" y="174" width="172" height="68" rx="6" fill="#fff" stroke="#5F5E5A" stroke-width="1.2"/>
+<text x="762" y="192" text-anchor="middle" font-size="12" font-weight="500" fill="#2C2C2A" font-family="var(--font-sans)">Management Tools</text>
+<text x="762" y="207" text-anchor="middle" font-size="10" fill="#444441" font-family="var(--font-sans)">Monitoring agents · Ops VMs</text>
+<text x="762" y="221" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="var(--font-sans)">NSG + UDR → 10.0.1.4</text>
+<text x="762" y="234" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="var(--font-sans)">RT: ent-net-rt-hub-mgmt-dev</text>
+
+<!-- Firewall Policy (outside subnets, inside hub) -->
+<rect x="880" y="136" width="180" height="116" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="1"/>
+<text x="970" y="152" text-anchor="middle" font-size="10" font-weight="500" fill="#412402" font-family="var(--font-sans)">Firewall Policy (Premium)</text>
+<text x="970" y="165" text-anchor="middle" font-size="10" fill="#854F0B" font-family="var(--font-sans)">ent-net-fw-policy-dev</text>
+<text x="970" y="182" font-size="9" fill="#633806" font-family="var(--font-sans)" x="890">DNAT: dnat-https-to-web</text>
+<text x="970" y="196" font-size="9" fill="#633806" font-family="var(--font-sans)" x="890">NET:  allow-web-to-app :8080</text>
+<text x="970" y="210" font-size="9" fill="#633806" font-family="var(--font-sans)" x="890">NET:  allow-app-to-sql :1433</text>
+<text x="970" y="224" font-size="9" fill="#633806" font-family="var(--font-sans)" x="890">APP:  allow-github *.github.com</text>
+<text x="970" y="238" font-size="9" fill="#A32D2D" font-family="var(--font-sans)" x="890">IDPS: Alert · DNS Proxy: ON</text>
+<text x="890" y="182" font-size="9" fill="#633806" font-family="var(--font-sans)">DNAT: dnat-https-to-web</text>
+<text x="890" y="196" font-size="9" fill="#633806" font-family="var(--font-sans)">NET:  allow-web-to-app :8080</text>
+<text x="890" y="210" font-size="9" fill="#633806" font-family="var(--font-sans)">NET:  allow-app-to-sql :1433</text>
+<text x="890" y="224" font-size="9" fill="#633806" font-family="var(--font-sans)">APP:  allow-github *.github.com</text>
+<text x="890" y="238" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">IDPS: Alert · DNS Proxy: ON</text>
+
+<rect x="882" y="137" width="46" height="13" rx="3" fill="#854F0B"/>
+<text x="905" y="147" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">Phase 2</text>
+
+<!-- Hub UDR Summary Banner -->
+<rect x="36" y="264" width="1044" height="32" rx="6" fill="#FCEBEB" fill-opacity=".7" stroke="#A32D2D" stroke-width=".8" stroke-dasharray="4 2"/>
+<text x="55" y="278" font-size="10" font-weight="500" fill="#791F1F" font-family="var(--font-sans)">Route Tables (UDR) — Phase 2:</text>
+<text x="55" y="289" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">All spoke subnets: 0.0.0.0/0 → 10.0.1.4 (Firewall)  +  10.1.0.0/16 → 10.0.1.4  +  10.2.0.0/16 → 10.0.1.4  +  10.3.0.0/16 → 10.0.1.4  +  10.0.0.0/16 → 10.0.1.4  |  disableBgpRoutePropagation: false</text>
+
+<!-- Peering arrows (Hub to Spoke label line) -->
+<text x="138" y="318" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">VNet Peering</text>
+<text x="138" y="330" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">AllowGatewayTransit: true</text>
+
+<text x="550" y="318" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">VNet Peering</text>
+<text x="550" y="330" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">AllowGatewayTransit: true</text>
+
+<text x="960" y="318" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">VNet Peering</text>
+<text x="960" y="330" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">AllowGatewayTransit: true</text>
+
+<!-- Hub peering connectors to spokes -->
+<line x1="138" y1="338" x2="138" y2="380" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arr-blue)"/>
+<line x1="550" y1="338" x2="550" y2="380" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arr-blue)"/>
+<line x1="960" y1="338" x2="960" y2="380" stroke="#378ADD" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arr-blue)"/>
+
+<!-- NSG Bastion label in hub -->
+<rect x="460" y="304" width="188" height="26" rx="4" fill="#F4EEF8" stroke="#8764B8" stroke-width=".8"/>
+<text x="554" y="315" text-anchor="middle" font-size="9" font-weight="500" fill="#26215C" font-family="var(--font-sans)">NSG: BastionSubnet (mandatory rules)</text>
+<text x="554" y="325" text-anchor="middle" font-size="9" fill="#534AB7" font-family="var(--font-sans)">AllowHttpsInBound :443 · AllowGatewayMgr · DenyAll</text>
+
+<!-- Hub Label bar at bottom -->
+<rect x="36" y="344" width="1044" height="24" rx="4" fill="#185FA5" fill-opacity=".08"/>
+<text x="55" y="358" font-size="9" fill="#0C447C" font-family="var(--font-sans)">DDoS Protection: Basic (Standard optional)  ·  DNS: Azure-provided (168.63.129.16) → Firewall DNS Proxy  ·  Address Space: 10.0.0.0/16</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SPOKE 1 — Web / App VNet -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="510" width="320" height="290" rx="14" fill="#E1F5EE" fill-opacity=".4" stroke="#0F6E56" stroke-width="1.5"/>
+<text x="38" y="529" font-size="12" font-weight="500" fill="#085041" font-family="var(--font-sans)">Spoke 1 — Web / App VNet</text>
+<text x="38" y="543" font-size="10" fill="#0F6E56" font-family="var(--font-sans)">ent-net-spoke1-web-vnet-dev  ·  10.1.0.0/16  ·  Phase 1</text>
+
+<!-- Peering label (spoke side) -->
+<text x="138" y="520" text-anchor="middle" font-size="9" fill="#0F6E56" font-family="var(--font-sans)">spoke1-to-hub · UseRemoteGateways: false (true in Ph4)</text>
+
+<!-- WebSubnet -->
+<rect x="36" y="552" width="280" height="112" rx="8" fill="#fff" stroke="#0F6E56" stroke-width="1"/>
+<text x="176" y="567" text-anchor="middle" font-size="10" font-weight="500" fill="#085041" font-family="var(--font-sans)">WebSubnet · 10.1.1.0/24 · 251 usable IPs</text>
+
+<!-- NSG badge WebSubnet -->
+<rect x="38" y="570" width="96" height="13" rx="3" fill="#0F6E56"/>
+<text x="86" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">NSG: web-nsg-dev</text>
+
+<!-- UDR badge -->
+<rect x="140" y="570" width="100" height="13" rx="3" fill="#A32D2D"/>
+<text x="190" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke1-web-dev</text>
+
+<text x="46" y="598" font-size="9" fill="#444" font-family="var(--font-sans)">VM: web-server-01 (no public IP)</text>
+<text x="46" y="611" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :443,:80 from Internet</text>
+<text x="46" y="624" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :22,:3389 from 10.0.3.0/26 (Bastion)</text>
+<text x="46" y="637" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">UDR: 0.0.0.0/0 → 10.0.1.4  |  10.x.0.0/16 → 10.0.1.4</text>
+<text x="46" y="650" font-size="9" fill="#444" font-family="var(--font-sans)">ASG: web-asg-dev</text>
+<text x="46" y="663" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">FW Rule: DNAT :443 → 10.1.1.4 (public inbound)</text>
+
+<!-- AppSubnet -->
+<rect x="36" y="674" width="280" height="112" rx="8" fill="#fff" stroke="#0F6E56" stroke-width="1"/>
+<text x="176" y="689" text-anchor="middle" font-size="10" font-weight="500" fill="#085041" font-family="var(--font-sans)">AppSubnet · 10.1.2.0/24 · 251 usable IPs</text>
+
+<rect x="38" y="692" width="96" height="13" rx="3" fill="#0F6E56"/>
+<text x="86" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">NSG: app-nsg-dev</text>
+
+<rect x="140" y="692" width="100" height="13" rx="3" fill="#A32D2D"/>
+<text x="190" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke1-app-dev</text>
+
+<text x="46" y="720" font-size="9" fill="#444" font-family="var(--font-sans)">VM: app-server-01 (no public IP)</text>
+<text x="46" y="733" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :8080,:8443 from 10.1.1.0/24 only</text>
+<text x="46" y="746" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :22,:3389 from 10.0.3.0/26 (Bastion)</text>
+<text x="46" y="759" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">UDR: 0.0.0.0/0 → 10.0.1.4  |  10.x.0.0/16 → 10.0.1.4</text>
+<text x="46" y="772" font-size="9" fill="#444" font-family="var(--font-sans)">FW Rule: allow-web-to-app (10.1.1.0/24→10.1.2.0/24 :8080)</text>
+<text x="46" y="785" font-size="9" fill="#444" font-family="var(--font-sans)">FW Rule: allow-app-to-sql (10.1.2.0/24→10.2.1.0/24 :1433)</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SPOKE 2 — Data VNet -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="390" y="510" width="320" height="290" rx="14" fill="#EAF3DE" fill-opacity=".4" stroke="#3B6D11" stroke-width="1.5"/>
+<text x="408" y="529" font-size="12" font-weight="500" fill="#173404" font-family="var(--font-sans)">Spoke 2 — Data VNet</text>
+<text x="408" y="543" font-size="10" fill="#3B6D11" font-family="var(--font-sans)">ent-net-spoke2-data-vnet-dev  ·  10.2.0.0/16  ·  Phase 1</text>
+<text x="550" y="520" text-anchor="middle" font-size="9" fill="#3B6D11" font-family="var(--font-sans)">spoke2-to-hub · UseRemoteGateways: false (true in Ph4)</text>
+
+<!-- DataSubnet -->
+<rect x="406" y="552" width="288" height="112" rx="8" fill="#fff" stroke="#3B6D11" stroke-width="1"/>
+<text x="550" y="567" text-anchor="middle" font-size="10" font-weight="500" fill="#173404" font-family="var(--font-sans)">DataSubnet · 10.2.1.0/24 · 251 usable IPs</text>
+
+<rect x="408" y="570" width="96" height="13" rx="3" fill="#3B6D11"/>
+<text x="456" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">NSG: data-nsg-dev</text>
+
+<rect x="510" y="570" width="106" height="13" rx="3" fill="#A32D2D"/>
+<text x="563" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke2-data-dev</text>
+
+<text x="416" y="598" font-size="9" fill="#444" font-family="var(--font-sans)">VM: sql-server-01 (no public IP)</text>
+<text x="416" y="611" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :1433 from 10.1.2.0/24 ONLY</text>
+<text x="416" y="624" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :22,:3389 from 10.0.3.0/26 (Bastion)</text>
+<text x="416" y="637" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">UDR: 0.0.0.0/0 → 10.0.1.4  |  no direct internet egress</text>
+<text x="416" y="650" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">FW DENY: deny-web-direct-to-data (web→data blocked)</text>
+<text x="416" y="663" font-size="9" fill="#444" font-family="var(--font-sans)">SQL Server 2022 · port 1433</text>
+
+<!-- PrivateEndpointSubnet -->
+<rect x="406" y="674" width="288" height="112" rx="8" fill="#fff" stroke="#3B6D11" stroke-width="1"/>
+<text x="550" y="689" text-anchor="middle" font-size="10" font-weight="500" fill="#173404" font-family="var(--font-sans)">PrivateEndpointSubnet · 10.2.2.0/24</text>
+
+<rect x="408" y="692" width="130" height="13" rx="3" fill="#3B6D11"/>
+<text x="473" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">privateEndpointNetworkPolicies: Disabled</text>
+
+<rect x="544" y="692" width="106" height="13" rx="3" fill="#A32D2D"/>
+<text x="597" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke2-pe-dev</text>
+
+<text x="416" y="720" font-size="9" fill="#444" font-family="var(--font-sans)">Azure SQL Private Endpoint</text>
+<text x="416" y="733" font-size="9" fill="#444" font-family="var(--font-sans)">Private IP: 10.2.2.4 (maps to PaaS public endpoint)</text>
+<text x="416" y="746" font-size="9" fill="#444" font-family="var(--font-sans)">Key Vault Private Endpoint: 10.2.2.5 (Phase 3)</text>
+<text x="416" y="759" font-size="9" fill="#444" font-family="var(--font-sans)">Traffic NEVER leaves Azure backbone</text>
+<text x="416" y="772" font-size="9" fill="#444" font-family="var(--font-sans)">DNS: Private DNS Zone → azure.privatedns.net</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SPOKE 3 — DMZ / Mgmt VNet -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="760" y="510" width="320" height="290" rx="14" fill="#FAEEDA" fill-opacity=".4" stroke="#854F0B" stroke-width="1.5"/>
+<text x="778" y="529" font-size="12" font-weight="500" fill="#412402" font-family="var(--font-sans)">Spoke 3 — DMZ / Mgmt VNet</text>
+<text x="778" y="543" font-size="10" fill="#854F0B" font-family="var(--font-sans)">ent-net-spoke3-dmz-vnet-dev  ·  10.3.0.0/16  ·  Phase 1</text>
+<text x="920" y="520" text-anchor="middle" font-size="9" fill="#854F0B" font-family="var(--font-sans)">spoke3-to-hub · UseRemoteGateways: false (true in Ph4)</text>
+
+<!-- DMZSubnet -->
+<rect x="776" y="552" width="288" height="112" rx="8" fill="#fff" stroke="#854F0B" stroke-width="1"/>
+<text x="920" y="567" text-anchor="middle" font-size="10" font-weight="500" fill="#412402" font-family="var(--font-sans)">DMZSubnet · 10.3.1.0/24 · 251 usable IPs</text>
+
+<rect x="778" y="570" width="96" height="13" rx="3" fill="#854F0B"/>
+<text x="826" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">NSG: dmz-nsg-dev</text>
+
+<rect x="880" y="570" width="100" height="13" rx="3" fill="#A32D2D"/>
+<text x="930" y="580" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke3-dmz-dev</text>
+
+<text x="786" y="598" font-size="9" fill="#444" font-family="var(--font-sans)">Internet-facing DMZ services (NVA / Proxy)</text>
+<text x="786" y="611" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: strict inbound — specific ports/sources only</text>
+<text x="786" y="624" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">UDR: 0.0.0.0/0 → 10.0.1.4  |  all egress via Firewall</text>
+<text x="786" y="637" font-size="9" fill="#444" font-family="var(--font-sans)">FW Rule: allow-jump-to-all :22,:3389 outbound</text>
+<text x="786" y="650" font-size="9" fill="#444" font-family="var(--font-sans)">10.3.1.0/24</text>
+
+<!-- JumpSubnet -->
+<rect x="776" y="674" width="288" height="112" rx="8" fill="#fff" stroke="#854F0B" stroke-width="1"/>
+<text x="920" y="689" text-anchor="middle" font-size="10" font-weight="500" fill="#412402" font-family="var(--font-sans)">JumpSubnet · 10.3.2.0/24 · 251 usable IPs</text>
+
+<rect x="778" y="692" width="96" height="13" rx="3" fill="#854F0B"/>
+<text x="826" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">NSG: jump-nsg-dev</text>
+
+<rect x="880" y="692" width="100" height="13" rx="3" fill="#A32D2D"/>
+<text x="930" y="702" text-anchor="middle" font-size="8" fill="#fff" font-family="var(--font-sans)">RT: rt-spoke3-jump-dev</text>
+
+<text x="786" y="720" font-size="9" fill="#444" font-family="var(--font-sans)">VM: jump-server-01 (NO public IP — zero exposure)</text>
+<text x="786" y="733" font-size="9" fill="#444" font-family="var(--font-sans)">NSG: Allow :22,:3389 ONLY from 10.0.3.0/26 (Bastion)</text>
+<text x="786" y="746" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">NSG: DenyAll other inbound — completely isolated</text>
+<text x="786" y="759" font-size="9" fill="#444" font-family="var(--font-sans)">Access: Portal → Bastion → HTTPS → RDP/SSH to VM</text>
+<text x="786" y="772" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">UDR: 0.0.0.0/0 → 10.0.1.4  |  10.x.0.0/16 → 10.0.1.4</text>
+<text x="786" y="785" font-size="9" fill="#444" font-family="var(--font-sans)">FW Rule: allow-jump-to-all :22,:3389 (admin access)</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TRAFFIC FLOW ARROWS (inter-spoke through Firewall) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+<!-- Inbound HTTPS: Internet → Firewall (DNAT) → Web -->
+<path d="M 105 66 L 105 490 L 138 490 L 138 510" fill="none" stroke="#378ADD" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+<rect x="40" y="470" width="170" height="14" rx="3" fill="#E6F1FB"/>
+<text x="125" y="481" text-anchor="middle" font-size="9" fill="#0C447C" font-family="var(--font-sans)">Internet → DNAT :443 → 10.1.1.4</text>
+
+<!-- Admin → Bastion -->
+<path d="M 490 66 L 490 100 L 553 100 L 553 136" fill="none" stroke="#8764B8" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+
+<!-- Log Analytics Telemetry -->
+<path d="M 675 66 L 675 100 L 138 100 L 138 136" fill="none" stroke="#854F0B" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr)"/>
+
+<!-- Threat Intel → Firewall -->
+<path d="M 865 66 L 865 100 L 200 100 L 200 136" fill="none" stroke="#A32D2D" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arr-red)"/>
+
+<!-- Web → Firewall → App (east-west) -->
+<path d="M 176 620 L 176 475 L 138 475 L 138 250 L 176 250 L 176 200 L 240 200" fill="none" stroke="#E07B00" stroke-width="1.5" stroke-dasharray="5 2" marker-end="url(#arr-orange)"/>
+<rect x="38" y="455" width="188" height="14" rx="3" fill="#FFF4CE"/>
+<text x="132" y="466" text-anchor="middle" font-size="9" fill="#412402" font-family="var(--font-sans)">Web → FW → App :8080 (east-west)</text>
+
+<!-- App → Firewall → SQL (cross-spoke) -->
+<path d="M 270 730 L 250 730 L 250 450 L 390 450 L 390 600 L 406 600" fill="none" stroke="#107C10" stroke-width="1.5" stroke-dasharray="5 2" marker-end="url(#arr-green)"/>
+<rect x="252" y="432" width="178" height="14" rx="3" fill="#DFF6DD"/>
+<text x="341" y="443" text-anchor="middle" font-size="9" fill="#173404" font-family="var(--font-sans)">App → FW → SQL :1433 (cross-spoke)</text>
+
+<!-- Bastion → Jump (admin path) -->
+<path d="M 553 252 L 553 430 L 920 430 L 920 510" fill="none" stroke="#8764B8" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+<rect x="660" y="412" width="178" height="14" rx="3" fill="#F4EEF8"/>
+<text x="749" y="423" text-anchor="middle" font-size="9" fill="#26215C" font-family="var(--font-sans)">Bastion → RDP/SSH → Jump :3389/:22</text>
+
+<!-- VPN Gateway → On-Prem -->
+<path d="M 349 136 L 349 80 L 300 80 L 300 66" fill="none" stroke="#3B6D11" stroke-width="1.5" stroke-dasharray="5 2" marker-end="url(#arr-green)"/>
+
+<!-- Internet egress through Firewall -->
+<path d="M 138 174 L 138 100 L 900 100 L 900 66" fill="none" stroke="#A32D2D" stroke-width="1" stroke-dasharray="3 2" opacity=".6" marker-end="url(#arr-red)"/>
+<rect x="880" y="82" width="140" height="13" rx="3" fill="#FCEBEB"/>
+<text x="950" y="92" text-anchor="middle" font-size="8" fill="#791F1F" font-family="var(--font-sans)">Internet egress (SNAT via FW PIP)</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- ADDRESS SPACE SUMMARY TABLE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="822" width="1060" height="194" rx="10" fill="var(--color-background-secondary, #F3F2F1)" fill-opacity=".8" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+<text x="38" y="842" font-size="12" font-weight="500" fill="var(--color-text-primary)" font-family="var(--font-sans)">IP Address Plan — Complete Reference</text>
+
+<!-- Table headers -->
+<rect x="36" y="850" width="1044" height="20" rx="4" fill="#185FA5"/>
+<text x="60"   y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">VNet / Subnet</text>
+<text x="290"  y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">CIDR</text>
+<text x="390"  y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">Usable IPs</text>
+<text x="480"  y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">NSG</text>
+<text x="640"  y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">Route Table (UDR)</text>
+<text x="830"  y="864" font-size="10" font-weight="500" fill="#fff" font-family="var(--font-sans)">Key Notes</text>
+
+<!-- Rows -->
+<rect x="36" y="870" width="1044" height="15" rx="2" fill="#E6F1FB" fill-opacity=".5"/>
+<text x="60"  y="881" font-size="9" fill="#0C447C" font-family="var(--font-sans)" font-weight="500">Hub VNet</text>
+<text x="290" y="881" font-size="9" fill="#0C447C" font-family="var(--font-sans)">10.0.0.0/16</text>
+<text x="390" y="881" font-size="9" fill="#0C447C" font-family="var(--font-sans)">65,534</text>
+<text x="480" y="881" font-size="9" fill="#5F5E5A" font-family="var(--font-sans)">—</text>
+<text x="640" y="881" font-size="9" fill="#5F5E5A" font-family="var(--font-sans)">—</text>
+<text x="830" y="881" font-size="9" fill="#5F5E5A" font-family="var(--font-sans)">Central connectivity hub. Contains all shared services.</text>
+
+<text x="60"  y="897" font-size="9" fill="#444" font-family="var(--font-sans)">  ├─ AzureFirewallSubnet</text>
+<text x="290" y="897" font-size="9" fill="#444" font-family="var(--font-sans)">10.0.1.0/26</text>
+<text x="390" y="897" font-size="9" fill="#444" font-family="var(--font-sans)">59</text>
+<text x="480" y="897" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">NONE (not supported)</text>
+<text x="640" y="897" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">NONE (would cause loop)</text>
+<text x="830" y="897" font-size="9" fill="#444" font-family="var(--font-sans)">/26 mandatory min. Firewall private IP = 10.0.1.4</text>
+
+<rect x="36" y="902" width="1044" height="15" rx="2" fill="#E6F1FB" fill-opacity=".3"/>
+<text x="60"  y="913" font-size="9" fill="#444" font-family="var(--font-sans)">  ├─ GatewaySubnet</text>
+<text x="290" y="913" font-size="9" fill="#444" font-family="var(--font-sans)">10.0.2.0/27</text>
+<text x="390" y="913" font-size="9" fill="#444" font-family="var(--font-sans)">27</text>
+<text x="480" y="913" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">NOT recommended</text>
+<text x="640" y="913" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">NONE (breaks BGP)</text>
+<text x="830" y="913" font-size="9" fill="#444" font-family="var(--font-sans)">/27 mandatory min. VPN Gateway Gen2 VpnGw2.</text>
+
+<text x="60"  y="929" font-size="9" fill="#444" font-family="var(--font-sans)">  ├─ AzureBastionSubnet</text>
+<text x="290" y="929" font-size="9" fill="#444" font-family="var(--font-sans)">10.0.3.0/26</text>
+<text x="390" y="929" font-size="9" fill="#444" font-family="var(--font-sans)">59</text>
+<text x="480" y="929" font-size="9" fill="#534AB7" font-family="var(--font-sans)">bastion-nsg-dev (mandatory)</text>
+<text x="640" y="929" font-size="9" fill="#5F5E5A" font-family="var(--font-sans)">—</text>
+<text x="830" y="929" font-size="9" fill="#444" font-family="var(--font-sans)">/26 mandatory min. 9 mandatory NSG rules. Standard SKU.</text>
+
+<rect x="36" y="934" width="1044" height="15" rx="2" fill="#E6F1FB" fill-opacity=".3"/>
+<text x="60"  y="945" font-size="9" fill="#444" font-family="var(--font-sans)">  └─ ManagementSubnet</text>
+<text x="290" y="945" font-size="9" fill="#444" font-family="var(--font-sans)">10.0.4.0/24</text>
+<text x="390" y="945" font-size="9" fill="#444" font-family="var(--font-sans)">251</text>
+<text x="480" y="945" font-size="9" fill="#444" font-family="var(--font-sans)">—</text>
+<text x="640" y="945" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">rt-hub-mgmt-dev</text>
+<text x="830" y="945" font-size="9" fill="#444" font-family="var(--font-sans)">Ops VMs, monitoring agents. UDR: 0.0.0.0/0 → 10.0.1.4</text>
+
+<text x="60"  y="961" font-size="9" fill="#085041" font-family="var(--font-sans)" font-weight="500">Spoke 1 / WebSubnet</text>
+<text x="290" y="961" font-size="9" fill="#085041" font-family="var(--font-sans)">10.1.1.0/24</text>
+<text x="390" y="961" font-size="9" fill="#085041" font-family="var(--font-sans)">251</text>
+<text x="480" y="961" font-size="9" fill="#085041" font-family="var(--font-sans)">web-nsg-dev</text>
+<text x="640" y="961" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">rt-spoke1-web-dev</text>
+<text x="830" y="961" font-size="9" fill="#444" font-family="var(--font-sans)">Internet-facing. FW DNAT :443→10.1.1.4. No public IPs on VMs.</text>
+
+<rect x="36" y="966" width="1044" height="15" rx="2" fill="#EAF3DE" fill-opacity=".4"/>
+<text x="60"  y="977" font-size="9" fill="#085041" font-family="var(--font-sans)" font-weight="500">Spoke 1 / AppSubnet</text>
+<text x="290" y="977" font-size="9" fill="#085041" font-family="var(--font-sans)">10.1.2.0/24</text>
+<text x="390" y="977" font-size="9" fill="#085041" font-family="var(--font-sans)">251</text>
+<text x="480" y="977" font-size="9" fill="#085041" font-family="var(--font-sans)">app-nsg-dev</text>
+<text x="640" y="977" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">rt-spoke1-app-dev</text>
+<text x="830" y="977" font-size="9" fill="#444" font-family="var(--font-sans)">Internal only. NSG source: 10.1.1.0/24 on :8080 exclusively.</text>
+
+<text x="60"  y="993" font-size="9" fill="#173404" font-family="var(--font-sans)" font-weight="500">Spoke 2 / DataSubnet</text>
+<text x="290" y="993" font-size="9" fill="#173404" font-family="var(--font-sans)">10.2.1.0/24</text>
+<text x="390" y="993" font-size="9" fill="#173404" font-family="var(--font-sans)">251</text>
+<text x="480" y="993" font-size="9" fill="#173404" font-family="var(--font-sans)">data-nsg-dev</text>
+<text x="640" y="993" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">rt-spoke2-data-dev</text>
+<text x="830" y="993" font-size="9" fill="#444" font-family="var(--font-sans)">SQL :1433 from 10.1.2.0/24 only. FW denies web→data direct.</text>
+
+<rect x="36" y="998" width="1044" height="15" rx="2" fill="#EAF3DE" fill-opacity=".4"/>
+<text x="60"  y="1009" font-size="9" fill="#173404" font-family="var(--font-sans)" font-weight="500">Spoke 2 / PrivateEndpointSubnet</text>
+<text x="290" y="1009" font-size="9" fill="#173404" font-family="var(--font-sans)">10.2.2.0/24</text>
+<text x="390" y="1009" font-size="9" fill="#173404" font-family="var(--font-sans)">251</text>
+<text x="480" y="1009" font-size="9" fill="#173404" font-family="var(--font-sans)">—</text>
+<text x="640" y="1009" font-size="9" fill="#A32D2D" font-family="var(--font-sans)">rt-spoke2-pe-dev</text>
+<text x="830" y="1009" font-size="9" fill="#444" font-family="var(--font-sans)">networkPolicies: Disabled (required for Private Endpoints).</text>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- LEGEND + TRAFFIC FLOW KEY -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="1028" width="1060" height="130" rx="10" fill="none" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+<text x="38" y="1047" font-size="12" font-weight="500" fill="var(--color-text-primary)" font-family="var(--font-sans)">Traffic Flow Key &amp; Legend</text>
+
+<!-- Flow lines legend -->
+<line x1="38" y1="1064" x2="90" y2="1064" stroke="#378ADD" stroke-width="2" marker-end="url(#arr-blue)"/>
+<text x="96" y="1068" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">Internet inbound (HTTPS → DNAT → Web VM)</text>
+
+<line x1="38" y1="1084" x2="90" y2="1084" stroke="#E07B00" stroke-width="2" stroke-dasharray="5 2" marker-end="url(#arr-orange)"/>
+<text x="96" y="1088" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">East-West: Web → Firewall → App (inspected, :8080)</text>
+
+<line x1="38" y1="1104" x2="90" y2="1104" stroke="#107C10" stroke-width="2" stroke-dasharray="5 2" marker-end="url(#arr-green)"/>
+<text x="96" y="1108" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">Cross-spoke: App → Firewall → SQL (inspected, :1433)</text>
+
+<line x1="38" y1="1124" x2="90" y2="1124" stroke="#A32D2D" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#arr-red)"/>
+<text x="96" y="1128" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">Internet egress (SNAT via Firewall PIP) / threat intel feed</text>
+
+<line x1="38" y1="1144" x2="90" y2="1144" stroke="#8764B8" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#arr)"/>
+<text x="96" y="1148" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">Admin: Portal → Bastion (HTTPS) → RDP/SSH → Jump VM (no public IP on VM)</text>
+
+<!-- Badge legend -->
+<rect x="500" y="1054" width="80" height="14" rx="3" fill="#A32D2D"/>
+<text x="540" y="1064" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">RT: route-table</text>
+<text x="590" y="1064" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">= Route Table (UDR) forcing traffic to Firewall</text>
+
+<rect x="500" y="1074" width="80" height="14" rx="3" fill="#0F6E56"/>
+<text x="540" y="1084" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">NSG: name</text>
+<text x="590" y="1084" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">= Network Security Group (stateful L4 filter)</text>
+
+<rect x="500" y="1094" width="46" height="14" rx="3" fill="#185FA5"/>
+<text x="523" y="1104" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">Phase 2</text>
+<text x="555" y="1104" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">= Deployed in this phase</text>
+
+<rect x="500" y="1114" width="36" height="14" rx="3" fill="#8764B8"/>
+<text x="518" y="1124" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">Ph 3</text>
+<text x="545" y="1124" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">= Phase 3 (Azure Bastion, Private Endpoints)</text>
+
+<rect x="500" y="1134" width="30" height="14" rx="3" fill="#3B6D11"/>
+<text x="515" y="1144" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">Ph 4</text>
+<text x="540" y="1144" font-size="10" fill="var(--color-text-secondary)" font-family="var(--font-sans)">= Phase 4 (VPN Gateway, BGP, hybrid connectivity)</text>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- ZERO TRUST SUMMARY BAR -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<rect x="20" y="1172" width="1060" height="56" rx="10" fill="#E6F1FB" stroke="#185FA5" stroke-width="1"/>
+<text x="38" y="1191" font-size="11" font-weight="500" fill="#0C447C" font-family="var(--font-sans)">Zero Trust Enforcement Summary</text>
+<text x="38" y="1207" font-size="10" fill="#185FA5" font-family="var(--font-sans)">Verify Explicitly: Azure AD auth for Bastion + IDPS signature inspection on all traffic</text>
+<text x="38" y="1220" font-size="10" fill="#185FA5" font-family="var(--font-sans)">Least Privilege: NSG allow-lists per subnet · FW explicit allow + deny rules · data tier only from app subnet :1433</text>
+<text x="550" y="1191" font-size="10" fill="#185FA5" font-family="var(--font-sans)">Assume Breach: Force-tunnel UDRs on all subnets · VNet segmentation limits lateral movement</text>
+<text x="550" y="1207" font-size="10" fill="#185FA5" font-family="var(--font-sans)">All inter-spoke traffic: Spoke → UDR → Firewall → inspected → Spoke (never direct)</text>
+<text x="550" y="1220" font-size="10" fill="#185FA5" font-family="var(--font-sans)">All egress: UDR 0.0.0.0/0 → Firewall SNAT → Internet (no VM touches internet directly)</text>
+
+<!-- Diagram title footer -->
+<text x="550" y="1248" text-anchor="middle" font-size="10" fill="var(--color-text-tertiary)" font-family="var(--font-sans)">Azure Enterprise Network Security Architecture · Phase 1 (Foundation) + Phase 2 (Security Perimeter) · AZ-700 Portfolio Project</text>
+<text x="550" y="1262" text-anchor="middle" font-size="9" fill="var(--color-text-tertiary)" font-family="var(--font-sans)">Region: East US · Resource Group: rg-ent-net-dev · IaC: Bicep · Azure Firewall Premium · Hub-Spoke · Zero Trust</text>
+
+</svg>
+</div>
+</body>
+</html>
